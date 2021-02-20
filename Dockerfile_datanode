@@ -1,0 +1,49 @@
+FROM centos:7
+
+RUN yum install -y java-1.8.0-openjdk && yum clean all
+RUN curl https://archive.apache.org/dist/hadoop/common/hadoop-3.1.2/hadoop-3.1.2.tar.gz \
+--output hadoop.tar.gz
+
+RUN tar -xf hadoop.tar.gz -C /opt/
+RUN rm -rf hadoop.tar.gz
+
+RUN mkdir -p /usr/local/hadoop
+RUN ln -s /opt/hadoop-3.1.2/ /usr/local/hadoop/current
+RUN useradd hadoop \
+&& useradd -G hadoop yarn \
+&& useradd -G hadoop hdfs
+
+RUN mkdir -p /opt/mount{1,2}/datanode-dir \
+&& chown hdfs:hadoop /opt/mount{1,2}/datanode-dir
+
+RUN mkdir /opt/mount{1,2}/nodemanager-lo{g,cal}-dir \
+&& chown yarn:hadoop /opt/mount{1,2}/nodemanager-lo{g,cal}-dir
+
+WORKDIR /usr/local/hadoop/current/etc/hadoop
+
+RUN curl https://raw.githubusercontent.com/KseniiaO/hadoop_files/main/core-site.xml \
+--output core-site.xml \
+&& curl https://raw.githubusercontent.com/KseniiaO/hadoop_files/main/hadoop-env.sh \
+--output hadoop-env.sh \
+&& curl https://raw.githubusercontent.com/KseniiaO/hadoop_files/main/hdfs-site.xml \
+--output hdfs-site.xml \
+&& curl https://raw.githubusercontent.com/KseniiaO/hadoop_files/main/yarn-site.xml \
+--output yarn-site.xml \
+&& curl https://raw.githubusercontent.com/KseniiaO/hadoop_files/main/worker.sh \
+--output scr.sh
+
+RUN chmod 775 scr.sh
+RUN mkdir /usr/local/hadoop/current/logs \
+&& chown hadoop:hadoop /usr/local/hadoop/current/logs \
+&& chmod g+w /usr/local/hadoop/current/logs
+
+ENV HADOOP_HOME="/usr/local/hadoop/current"
+
+VOLUME [/opt/mount1/datanode-dir]
+VOLUME [/opt/mount2/datanode-dir]
+VOLUME [/opt/mount1/nodemanager-local-dir]
+VOLUME [/opt/mount2/nodemanager-local-dir]
+VOLUME [/opt/mount1/nodemanager-log-dir]
+VOLUME [/opt/mount2/nodemanager-log-dir]
+
+CMD ["/usr/local/hadoop/current/etc/hadoop/scr.sh"]
