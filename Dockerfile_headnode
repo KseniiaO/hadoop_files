@@ -2,10 +2,9 @@ FROM centos:7
 
 RUN yum install -y java-1.8.0-openjdk && yum clean all
 RUN curl https://archive.apache.org/dist/hadoop/common/hadoop-3.1.2/hadoop-3.1.2.tar.gz \
---output hadoop.tar.gz
-
-RUN tar -xf hadoop.tar.gz -C /opt/
-RUN rm -rf hadoop.tar.gz
+--output hadoop.tar.gz \
+&& tar -xf hadoop.tar.gz -C /opt/ \
+&&rm -rf hadoop.tar.gz
 
 RUN mkdir -p /usr/local/hadoop
 RUN ln -s /opt/hadoop-3.1.2/ /usr/local/hadoop/current
